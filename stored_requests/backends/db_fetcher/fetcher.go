@@ -10,12 +10,12 @@ import (
 	"github.com/prebid/prebid-server/stored_requests"
 )
 
-func NewFetcher(db *sql.DB, queryMaker func(int, int) string) stored_requests.Fetcher {
+func NewFetcher(db *sql.DB, queryMaker func(int, int) string) stored_requests.GlobalFetcher {
 	if db == nil {
-		glog.Fatalf("The Postgres Stored Request Fetcher requires a database connection. Please report this as a bug.")
+		glog.Fatalf("The Postgres Stored Request StoredRequestsFetcher requires a database connection. Please report this as a bug.")
 	}
 	if queryMaker == nil {
-		glog.Fatalf("The Postgres Stored Request Fetcher requires a queryMaker function. Please report this as a bug.")
+		glog.Fatalf("The Postgres Stored Request StoredRequestsFetcher requires a queryMaker function. Please report this as a bug.")
 	}
 	return &dbFetcher{
 		db:         db,

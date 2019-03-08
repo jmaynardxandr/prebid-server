@@ -38,7 +38,7 @@ type AmpResponse struct {
 func NewAmpEndpoint(
 	ex exchange.Exchange,
 	validator openrtb_ext.BidderParamValidator,
-	requestsById stored_requests.Fetcher,
+	requestsById stored_requests.StoredRequestsFetcher,
 	cfg *config.Configuration,
 	met pbsmetrics.MetricsEngine,
 	pbsAnalytics analytics.PBSAnalyticsModule,

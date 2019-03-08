@@ -6,11 +6,16 @@ import (
 	"fmt"
 )
 
-// Fetcher knows how to fetch Stored Request data by id.
+type GlobalFetcher interface {
+	FetchRequests(ctx context.Context, requestIDs []string, impIDs []string) (requestData map[string]json.RawMessage, impData map[string]json.RawMessage, errs []error)
+	FetchCategories(primaryAdServer, publisherId, iabCategory string) (string, error)
+}
+
+// StoredRequestsFetcher knows how to fetch Stored Request data by id.
 //
 // Implementations must be safe for concurrent access by multiple goroutines.
 // Callers are expected to share a single instance as much as possible.
-type Fetcher interface {
+type StoredRequestsFetcher interface {
 	// FetchRequests fetches the stored requests for the given IDs.
 	//
 	// The first return value will be the Stored Request data, or nil if it doesn't exist.
@@ -28,7 +33,7 @@ type CategoryFetcher interface {
 	FetchCategories(primaryAdServer, publisherId, iabCategory string) (string, error)
 }
 
-// NotFoundError is an error type to flag that an ID was not found by the Fetcher.
+// NotFoundError is an error type to flag that an ID was not found by the StoredRequestsFetcher.
 // This was added to support Multifetcher and any other case where we might expect
 // that all IDs would not be found, and want to disentangle those errors from the others.
 type NotFoundError struct {
@@ -42,9 +47,9 @@ func (e NotFoundError) Error() string {
 
 // Cache is an intermediate layer which can be used to create more complex Fetchers by composition.
 // Implementations must be safe for concurrent access by multiple goroutines.
-// To add a Cache layer in front of a Fetcher, see WithCache()
+// To add a Cache layer in front of a StoredRequestsFetcher, see WithCache()
 type Cache interface {
-	// Get works much like Fetcher.FetchRequests, with a few exceptions:
+	// Get works much like StoredRequestsFetcher.FetchRequests, with a few exceptions:
 	//
 	// 1. Any (actionable) errors should be logged by the implementation, rather than returned.
 	// 2. The returned maps _may_ be written to.
@@ -124,15 +129,15 @@ func (c ComposedCache) Save(ctx context.Context, requestData map[string]json.Raw
 }
 
 type fetcherWithCache struct {
-	fetcher Fetcher
+	fetcher StoredRequestsFetcher
 	cache   Cache
 }
 
-// WithCache returns a Fetcher which uses the given Cache before delegating to the original.
-// This can be called multiple times to compose Cache layers onto the backing Fetcher, though
+// WithCache returns a StoredRequestsFetcher which uses the given Cache before delegating to the original.
+// This can be called multiple times to compose Cache layers onto the backing StoredRequestsFetcher, though
 // it is usually more desirable to first compose caches with Compose, ensuring propagation of updates
 // and invalidations through all cache layers.
-func WithCache(fetcher Fetcher, cache Cache) Fetcher {
+func WithCache(fetcher StoredRequestsFetcher, cache Cache) StoredRequestsFetcher {
 	return &fetcherWithCache{
 		cache:   cache,
 		fetcher: fetcher,

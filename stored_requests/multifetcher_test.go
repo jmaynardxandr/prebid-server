@@ -29,7 +29,7 @@ func TestMultiFetcher(t *testing.T) {
 	mf := &MultiFetcher{mf0, mf1}
 
 	// Verify we can use multifetcher as a fetcher
-	var fetcher Fetcher = mf
+	var fetcher StoredRequestsFetcher = mf
 
 	requestData, impData, errs := fetcher.FetchRequests(context.Background(), []string{"abc", "def"}, []string{"imp-0", "imp-1"})
 
@@ -87,7 +87,7 @@ func TestOtherError(t *testing.T) {
 	ids := []string{"abc", "def"}
 
 	// Verify we can use multifetcher as a fetcher
-	var fetcher Fetcher = mf
+	var fetcher StoredRequestsFetcher = mf
 
 	requestData, impData, errs := fetcher.FetchRequests(context.Background(), ids, []string{"123"})
 

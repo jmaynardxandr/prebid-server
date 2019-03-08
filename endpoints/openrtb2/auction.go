@@ -34,7 +34,7 @@ import (
 
 const storedRequestTimeoutMillis = 50
 
-func NewEndpoint(ex exchange.Exchange, validator openrtb_ext.BidderParamValidator, requestsById stored_requests.Fetcher, cfg *config.Configuration, met pbsmetrics.MetricsEngine, pbsAnalytics analytics.PBSAnalyticsModule, disabledBidders map[string]string, defReqJSON []byte, bidderMap map[string]openrtb_ext.BidderName, categories stored_requests.CategoryFetcher) (httprouter.Handle, error) {
+func NewEndpoint(ex exchange.Exchange, validator openrtb_ext.BidderParamValidator, requestsById stored_requests.StoredRequestsFetcher, cfg *config.Configuration, met pbsmetrics.MetricsEngine, pbsAnalytics analytics.PBSAnalyticsModule, disabledBidders map[string]string, defReqJSON []byte, bidderMap map[string]openrtb_ext.BidderName, categories stored_requests.CategoryFetcher) (httprouter.Handle, error) {
 
 	if ex == nil || validator == nil || requestsById == nil || cfg == nil || met == nil {
 		return nil, errors.New("NewEndpoint requires non-nil arguments.")
@@ -47,7 +47,7 @@ func NewEndpoint(ex exchange.Exchange, validator openrtb_ext.BidderParamValidato
 type endpointDeps struct {
 	ex               exchange.Exchange
 	paramsValidator  openrtb_ext.BidderParamValidator
-	storedReqFetcher stored_requests.Fetcher
+	storedReqFetcher stored_requests.StoredRequestsFetcher
 	cfg              *config.Configuration
 	metricsEngine    pbsmetrics.MetricsEngine
 	analytics        analytics.PBSAnalyticsModule
