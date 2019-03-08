@@ -6,10 +6,10 @@ import (
 	"fmt"
 )
 
-// MultiFetcher is a StoredRequestsFetcher composed of multiple sub-Fetchers that are all polled for results.
+// MultiFetcher is a GlobalFetcher composed of multiple sub-Fetchers that are all polled for results.
 type MultiFetcher []GlobalFetcher
 
-// FetchRequests implements the StoredRequestsFetcher interface for MultiFetcher
+// FetchRequests implements the GlobalFetcher interface for MultiFetcher
 func (mf MultiFetcher) FetchRequests(ctx context.Context, requestIDs []string, impIDs []string) (requestData map[string]json.RawMessage, impData map[string]json.RawMessage, errs []error) {
 	requestData = make(map[string]json.RawMessage, len(requestIDs))
 	impData = make(map[string]json.RawMessage, len(impIDs))

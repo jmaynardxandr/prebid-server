@@ -184,7 +184,6 @@ func New(cfg *config.Configuration) (r *Router, err error) {
 		},
 	}
 	fetcher, ampFetcher, db, shutdown, categoriesFetcher := storedRequestsConf.NewStoredRequests(cfg, theClient, r.Router)
-	//catFetcher, _ := categoriesFetcher.(stored_requests.CategoryFetcher)
 
 	// todo(zachbadgett): better shutdown
 	r.Shutdown = shutdown

@@ -15,7 +15,7 @@ import (
 	"golang.org/x/net/context/ctxhttp"
 )
 
-// NewFetcher returns a StoredRequestsFetcher which uses the Client to pull data from the endpoint.
+// NewFetcher returns a Fetcher which uses the Client to pull data from the endpoint.
 //
 // This file expects the endpoint to satisfy the following API:
 //

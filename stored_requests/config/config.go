@@ -24,8 +24,8 @@ import (
 
 // NewStoredRequests returns four things:
 //
-// 1. A StoredRequestsFetcher which can be used to get Stored Requests for /openrtb2/auction
-// 2. A StoredRequestsFetcher which can be used to get Stored Requests for /openrtb2/amp
+// 1. A Fetcher which can be used to get Stored Requests for /openrtb2/auction
+// 2. A Fetcher which can be used to get Stored Requests for /openrtb2/amp
 // 3. A DB connection, if one was created. This may be nil.
 // 4. A function which should be called on shutdown for graceful cleanups.
 //
