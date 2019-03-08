@@ -87,7 +87,7 @@ func TestRaceIntegration(t *testing.T) {
 	}
 	categoriesFetcher, error := newCategoryFetcher("./test/category-mapping")
 	if error != nil {
-		t.Errorf("Failed to create a category StoredRequestsFetcher: %v", error)
+		t.Errorf("Failed to create a category Fetcher: %v", error)
 	}
 	theMetrics := pbsmetrics.NewMetrics(metrics.NewRegistry(), openrtb_ext.BidderList())
 	ex := NewExchange(server.Client(), &wellBehavedCache{}, cfg, theMetrics, adapters.ParseBidderInfos("../static/bidder-info", openrtb_ext.BidderList()), gdpr.AlwaysAllow{}, currencies.NewRateConverterDefault())
@@ -246,7 +246,7 @@ func TestPanicRecoveryHighLevel(t *testing.T) {
 
 	categoriesFetcher, error := newCategoryFetcher("./test/category-mapping")
 	if error != nil {
-		t.Errorf("Failed to create a category StoredRequestsFetcher: %v", error)
+		t.Errorf("Failed to create a category Fetcher: %v", error)
 	}
 	_, err := e.HoldAuction(context.Background(), request, &emptyUsersync{}, pbsmetrics.Labels{}, &categoriesFetcher)
 	if err != nil {
@@ -312,7 +312,7 @@ func runSpec(t *testing.T, filename string, spec *exchangeSpec) {
 	biddersInAuction := findBiddersInAuction(t, filename, &spec.IncomingRequest.OrtbRequest)
 	categoriesFetcher, error := newCategoryFetcher("./test/category-mapping")
 	if error != nil {
-		t.Errorf("Failed to create a category StoredRequestsFetcher: %v", error)
+		t.Errorf("Failed to create a category Fetcher: %v", error)
 	}
 	bid, err := ex.HoldAuction(context.Background(), &spec.IncomingRequest.OrtbRequest, mockIdFetcher(spec.IncomingRequest.Usersyncs), pbsmetrics.Labels{}, &categoriesFetcher)
 	responseTimes := extractResponseTimes(t, filename, bid)
@@ -417,7 +417,7 @@ func TestCategoryMapping(t *testing.T) {
 
 	categoriesFetcher, error := newCategoryFetcher("./test/category-mapping")
 	if error != nil {
-		t.Errorf("Failed to create a category StoredRequestsFetcher: %v", error)
+		t.Errorf("Failed to create a category Fetcher: %v", error)
 	}
 
 	priceGran := openrtb_ext.PriceGranularity{Precision: 2, Ranges: make([]openrtb_ext.GranularityRange, 0, 0)}
