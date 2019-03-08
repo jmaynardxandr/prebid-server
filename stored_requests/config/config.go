@@ -46,9 +46,9 @@ func NewStoredRequests(cfg *config.Configuration, client *http.Client, router *h
 	eventProducers, ampEventProducers := newEventProducers(&cfg.StoredRequests, client, db, router)
 	cache := newCache(&cfg.StoredRequests)
 	ampCache := newCache(&cfg.StoredRequests)
-	fetcher = newFetcher(&cfg.StoredRequests, client, db).(stored_requests.StoredRequestsFetcher)
-	ampFetcher = newFetcher(&cfg.StoredRequests, client, db).(stored_requests.StoredRequestsFetcher)
-	categoriesFetcher = newFetcher(&cfg.CategoryMapping, client, db).(stored_requests.CategoryFetcher)
+	fetcher = newFetcher(&cfg.StoredRequests, client, db, false).(stored_requests.StoredRequestsFetcher)
+	ampFetcher = newFetcher(&cfg.StoredRequests, client, db, true).(stored_requests.StoredRequestsFetcher)
+	categoriesFetcher = newFetcher(&cfg.CategoryMapping, client, db, false).(stored_requests.CategoryFetcher)
 
 	fetcher = stored_requests.WithCache(fetcher, cache)
 	ampFetcher = stored_requests.WithCache(ampFetcher, ampCache)
@@ -83,7 +83,7 @@ func addListeners(cache stored_requests.Cache, eventProducers []events.EventProd
 	}
 }
 
-func newFetcher(cfg *config.StoredRequests, client *http.Client, db *sql.DB) (fetcher stored_requests.GlobalFetcher) {
+func newFetcher(cfg *config.StoredRequests, client *http.Client, db *sql.DB, isAmp bool) (fetcher stored_requests.GlobalFetcher) {
 	idList := make(stored_requests.MultiFetcher, 0, 3)
 
 	if cfg.Files {
@@ -94,12 +94,13 @@ func newFetcher(cfg *config.StoredRequests, client *http.Client, db *sql.DB) (fe
 		glog.Infof("Loading Stored Requests via Postgres.\nQuery: %s\nAMP Query: %s", cfg.Postgres.FetcherQueries.QueryTemplate, cfg.Postgres.FetcherQueries.AmpQueryTemplate)
 		idList = append(idList, db_fetcher.NewFetcher(db, cfg.Postgres.FetcherQueries.MakeQuery))
 	}
-	if cfg.HTTP.Endpoint != "" {
+	if cfg.HTTP.Endpoint != "" && !isAmp {
 		glog.Infof("Loading Stored Requests via HTTP. endpoint=%s", cfg.HTTP.Endpoint)
 		idList = append(idList, http_fetcher.NewFetcher(client, cfg.HTTP.Endpoint))
 	}
-	if cfg.HTTP.AmpEndpoint != "" {
+	if cfg.HTTP.AmpEndpoint != "" && isAmp {
 		glog.Infof("Loading Stored Requests via HTTP. amp_endpoint=%s", cfg.HTTP.AmpEndpoint)
+		idList = append(idList, http_fetcher.NewFetcher(client, cfg.HTTP.AmpEndpoint))
 	}
 
 	fetcher = consolidate(idList)

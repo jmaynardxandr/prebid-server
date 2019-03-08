@@ -493,7 +493,7 @@ func SetupViper(v *viper.Viper, filename string) {
 	v.SetDefault("datacache.ttl_seconds", 0)
 	v.SetDefault("category_mapping.filesystem", true)
 	v.SetDefault("category_mapping.directorypath", "./static/category-mapping")
-	v.SetDefault("stored_requests.filesystem", true)
+	v.SetDefault("stored_requests.filesystem", false)
 	v.SetDefault("stored_requests.directorypath", "./stored_requests/data/by_id")
 	v.SetDefault("stored_requests.postgres.connection.dbname", "")
 	v.SetDefault("stored_requests.postgres.connection.host", "")
