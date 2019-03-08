@@ -448,10 +448,12 @@ func (a *AppNexusAdapter) MakeBids(internalRequest *openrtb.BidRequest, external
 				errs = append(errs, err)
 			} else {
 				if bidType, err := getMediaTypeForBid(&impExt); err == nil {
-					if len(bid.Cat) == 0 {
-						if iabCategory, err := a.getIabCategoryForBid(&impExt); err == nil {
-							bid.Cat = []string{iabCategory}
-						}
+
+					//TODO: change to category from extension
+					if iabCategory, err := a.getIabCategoryForBid(&impExt); err == nil {
+						bid.Cat = []string{iabCategory}
+					} else if bid.Cat != nil { //remove this if
+						bid.Cat = []string{bid.Cat[0]}
 					}
 
 					bidResponse.Bids = append(bidResponse.Bids, &adapters.TypedBid{
@@ -486,6 +488,9 @@ func getMediaTypeForBid(bid *appnexusBidExt) (openrtb_ext.BidType, error) {
 // getIabCategoryForBid maps an appnexus brand id to an IAB category.
 func (a *AppNexusAdapter) getIabCategoryForBid(bid *appnexusBidExt) (string, error) {
 	// TODO: Change from BrandId to a CategoryId once that is returned from impbus
+	if &bid.Appnexus == nil || bid.Appnexus.BrandId == 0 {
+		return "", fmt.Errorf("no category in bid extension found")
+	}
 	brandIDString := strconv.Itoa(bid.Appnexus.BrandId)
 	if iabCategory, ok := a.iabCategoryMap[brandIDString]; ok {
 		return iabCategory, nil
