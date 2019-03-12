@@ -68,8 +68,16 @@ type appnexusImpExtAppnexus struct {
 	PrivateSizes      json.RawMessage `json:"private_sizes,omitempty"`
 }
 
-type appnexusBidExt struct {
-	Appnexus appnexusBidExtAppnexus `json:"appnexus"`
+type appnexusImpExt struct {
+	Appnexus appnexusImpExtAppnexus `json:"appnexus"`
+}
+
+type appnexusBidExtVideo struct {
+	Duration int `json:"duration"`
+}
+
+type appnexusBidExtCreative struct {
+	Video appnexusBidExtVideo `json:"video"`
 }
 
 type appnexusBidExtAppnexus struct {
@@ -78,8 +86,8 @@ type appnexusBidExtAppnexus struct {
 	BrandCategory int `json:"brand_category_id"`
 }
 
-type appnexusImpExt struct {
-	Appnexus appnexusImpExtAppnexus `json:"appnexus"`
+type appnexusBidExt struct {
+	Appnexus appnexusBidExtAppnexus `json:"appnexus"`
 }
 
 type appnexusReqExtAppnexus struct {
@@ -476,8 +484,8 @@ func (a *AppNexusAdapter) MakeBids(internalRequest *openrtb.BidRequest, external
 	for _, sb := range bidResp.SeatBid {
 		for i := 0; i < len(sb.Bid); i++ {
 			bid := sb.Bid[i]
-			var impExt appnexusBidExt
-			if err := json.Unmarshal(bid.Ext, &impExt); err != nil {
+			var bidExt appnexusBidExt
+			if err := json.Unmarshal(bid.Ext, &bidExt); err != nil {
 				errs = append(errs, err)
 			} else {
 				if bidType, err := getMediaTypeForBid(&impExt); err == nil {
@@ -487,9 +495,14 @@ func (a *AppNexusAdapter) MakeBids(internalRequest *openrtb.BidRequest, external
 						bid.Cat = bid.Cat[:1]
 					}
 
+					impVideo := &openrtb_ext.ExtBidPrebidVideo{
+						Duration: bidExt.Appnexus.CreativeInfo.Video.Duration,
+					}
+
 					bidResponse.Bids = append(bidResponse.Bids, &adapters.TypedBid{
-						Bid:     &bid,
-						BidType: bidType,
+						Bid:      &bid,
+						BidType:  bidType,
+						BidVideo: impVideo,
 					})
 				} else {
 					errs = append(errs, err)
