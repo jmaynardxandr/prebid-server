@@ -27,15 +27,16 @@ type Configuration struct {
 	EnableGzip  bool       `mapstructure:"enable_gzip"`
 	// StatusResponse is the string which will be returned by the /status endpoint when things are OK.
 	// If empty, it will return a 204 with no content.
-	StatusResponse  string          `mapstructure:"status_response"`
-	AuctionTimeouts AuctionTimeouts `mapstructure:"auction_timeouts_ms"`
-	CacheURL        Cache           `mapstructure:"cache"`
-	RecaptchaSecret string          `mapstructure:"recaptcha_secret"`
-	HostCookie      HostCookie      `mapstructure:"host_cookie"`
-	Metrics         Metrics         `mapstructure:"metrics"`
-	DataCache       DataCache       `mapstructure:"datacache"`
-	StoredRequests  StoredRequests  `mapstructure:"stored_requests"`
-	CategoryMapping StoredRequests  `mapstructure:"category_mapping"`
+	StatusResponse    string          `mapstructure:"status_response"`
+	AuctionTimeouts   AuctionTimeouts `mapstructure:"auction_timeouts_ms"`
+	CacheURL          Cache           `mapstructure:"cache"`
+	RecaptchaSecret   string          `mapstructure:"recaptcha_secret"`
+	HostCookie        HostCookie      `mapstructure:"host_cookie"`
+	Metrics           Metrics         `mapstructure:"metrics"`
+	DataCache         DataCache       `mapstructure:"datacache"`
+	StoredRequests    StoredRequests  `mapstructure:"stored_requests"`
+	AmpStoredRequests StoredRequests  `mapstructure:"amp_stored_requests"`
+	CategoryMapping   StoredRequests  `mapstructure:"category_mapping"`
 
 	// Adapters should have a key for every openrtb_ext.BidderName, converted to lower-case.
 	// Se also: https://github.com/spf13/viper/issues/371#issuecomment-335388559

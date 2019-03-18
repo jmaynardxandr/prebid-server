@@ -183,11 +183,12 @@ func New(cfg *config.Configuration, rateConvertor *currencies.RateConverter) (r 
 			TLSClientConfig:     &tls.Config{RootCAs: ssl.GetRootCAPool()},
 		},
 	}
-	fetcher, ampFetcher, db, shutdown, categoriesFetcher := storedRequestsConf.NewStoredRequests(cfg, theClient, r.Router)
+	fetcher, ampFetcher, dbs, shutdown, categoriesFetcher := storedRequestsConf.CreateStoredRequests(cfg, theClient, r.Router)
 
 	// todo(zachbadgett): better shutdown
 	r.Shutdown = shutdown
-	if err := loadDataCache(cfg, db); err != nil {
+	// todo(jmaynard): multiple dbs may imply multiple data caches (or one datacache that queries multiple dbs)
+	if err := loadDataCache(cfg, dbs[0]); err != nil {
 		return nil, fmt.Errorf("Prebid Server could not load data cache: %v", err)
 	}
 

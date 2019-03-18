@@ -32,6 +32,9 @@ type StoredRequests struct {
 	// This is intended to be a useful development tool and not recommended for a production environment.
 	// It should not be exposed to public networks without authentication.
 	CacheEventsAPI bool `mapstructure:"cache_events_api"`
+	// CacheEvents configures an instance of stored_requests/events/api/api.go.
+	// This is a sub-object containing the endpoint name to use for this API endpoint.
+	CacheEvents CacheEventsConfig `mapstructure:"cache_events"`
 	// HTTPEvents configures an instance of stored_requests/events/http/http.go.
 	// If non-nil, the server will use those endpoints to populate and update the cache.
 	HTTPEvents HTTPEventsConfig `mapstructure:"http_events"`
@@ -51,6 +54,11 @@ func (cfg HTTPEventsConfig) TimeoutDuration() time.Duration {
 
 func (cfg HTTPEventsConfig) RefreshRateDuration() time.Duration {
 	return time.Duration(cfg.RefreshRate) * time.Second
+}
+
+// CacheEventsConfig configured stored_requests/events/api/api.go
+type CacheEventsConfig struct {
+	Endpoint string `mapstructure:"endpoint"`
 }
 
 // HTTPFetcherConfig configures a stored_requests/backends/http_fetcher/fetcher.go
