@@ -19,8 +19,8 @@ import (
 )
 
 func TestNewEmptyFetcher(t *testing.T) {
-	fetcher := newFetcher(&config.StoredRequests{}, nil, nil, false)
-	ampFetcher := newFetcher(&config.StoredRequests{}, nil, nil, true)
+	fetcher := newFetcher(&config.StoredRequests{}, nil, nil)
+	ampFetcher := newFetcher(&config.StoredRequests{}, nil, nil)
 	if fetcher == nil || ampFetcher == nil {
 		t.Errorf("The fetchers should be non-nil, even with an empty config.")
 	}
@@ -35,16 +35,14 @@ func TestNewEmptyFetcher(t *testing.T) {
 func TestNewHTTPFetcher(t *testing.T) {
 	fetcher := newFetcher(&config.StoredRequests{
 		HTTP: config.HTTPFetcherConfig{
-			Endpoint:    "stored-requests.prebid.com",
-			AmpEndpoint: "stored-requests.prebid.com?type=amp",
+			Endpoint: "stored-requests.prebid.com",
 		},
-	}, nil, nil, false)
+	}, nil, nil)
 	ampFetcher := newFetcher(&config.StoredRequests{
 		HTTP: config.HTTPFetcherConfig{
-			Endpoint:    "stored-requests.prebid.com",
-			AmpEndpoint: "stored-requests.prebid.com?type=amp",
+			Endpoint: "stored-requests.prebid.com?type=amp",
 		},
-	}, nil, nil, true)
+	}, nil, nil)
 	if httpFetcher, ok := fetcher.(*http_fetcher.HttpFetcher); ok {
 		if httpFetcher.Endpoint != "stored-requests.prebid.com?" {
 			t.Errorf("The HTTP fetcher is using the wrong endpoint. Expected %s, got %s", "stored-requests.prebid.com?", httpFetcher.Endpoint)
@@ -64,16 +62,14 @@ func TestNewHTTPFetcher(t *testing.T) {
 func TestNewHTTPFetcherNoAmp(t *testing.T) {
 	fetcher := newFetcher(&config.StoredRequests{
 		HTTP: config.HTTPFetcherConfig{
-			Endpoint:    "stored-requests.prebid.com",
-			AmpEndpoint: "",
+			Endpoint: "stored-requests.prebid.com",
 		},
-	}, nil, nil, false)
+	}, nil, nil)
 	ampFetcher := newFetcher(&config.StoredRequests{
 		HTTP: config.HTTPFetcherConfig{
-			Endpoint:    "stored-requests.prebid.com",
-			AmpEndpoint: "",
+			Endpoint: "",
 		},
-	}, nil, nil, true)
+	}, nil, nil)
 	if httpFetcher, ok := fetcher.(*http_fetcher.HttpFetcher); ok {
 		if httpFetcher.Endpoint != "stored-requests.prebid.com?" {
 			t.Errorf("The HTTP fetcher is using the wrong endpoint. Expected %s, got %s", "stored-requests.prebid.com?", httpFetcher.Endpoint)
@@ -85,6 +81,26 @@ func TestNewHTTPFetcherNoAmp(t *testing.T) {
 		t.Errorf("An HTTP Fetching config should not return an Amp HTTP fetcher in this case. Got %v (%v)", ampFetcher, httpAmpFetcher)
 	}
 }
+
+func TestResolveConfigLegacy(t *testing.T) {
+	// TODO: Ensure Amp settings in "StoredRequests" cause an "AmpStoredReuqests" to be filled in
+	/*
+		sr := config.StoredRequests {
+			Files: false,
+			Path: "",
+			Postgres: {
+				ConnectionInfo: {
+					Database: ""
+				}
+			}
+		}
+	*/
+}
+
+func TestResolveConfigWithAmp(t *testing.T) {
+	// TODO: Ensure Amp settings in "StoredRequests" don't overwrite "AmpStoredRequests" when both are given
+}
+
 func TestNewHTTPEvents(t *testing.T) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -100,11 +116,9 @@ func TestNewHTTPEvents(t *testing.T) {
 			Timeout:     1000,
 		},
 	}
-	evProducers, ampProducers := newEventProducers(cfg, server1.Client(), nil, nil)
+	evProducers := newEventProducers(cfg, server1.Client(), nil, nil)
 	assertSliceLength(t, evProducers, 1)
-	assertSliceLength(t, ampProducers, 1)
 	assertHttpWithURL(t, evProducers[0], server1.URL)
-	assertHttpWithURL(t, ampProducers[0], server2.URL)
 }
 
 func TestNewEmptyCache(t *testing.T) {
@@ -135,15 +149,26 @@ func TestNewPostgresEventProducers(t *testing.T) {
 	cfg := &config.StoredRequests{
 		Postgres: config.PostgresConfig{
 			CacheInitialization: config.PostgresCacheInitializer{
-				Timeout:  50,
-				Query:    "SELECT id, requestData, type FROM stored_data",
-				AmpQuery: "SELECT id, requestData, type FROM stored_amp_data",
+				Timeout: 50,
+				Query:   "SELECT id, requestData, type FROM stored_data",
 			},
 			PollUpdates: config.PostgresUpdatePolling{
 				RefreshRate: 20,
 				Timeout:     50,
 				Query:       "SELECT id, requestData, type FROM stored_data WHERE last_updated > $1",
-				AmpQuery:    "SELECT id, requestData, type FROM stored_amp_data WHERE last_updated > $1",
+			},
+		},
+	}
+	ampCfg := &config.StoredRequests{
+		Postgres: config.PostgresConfig{
+			CacheInitialization: config.PostgresCacheInitializer{
+				Timeout: 50,
+				Query:   "SELECT id, requestData, type FROM stored_amp_data",
+			},
+			PollUpdates: config.PostgresUpdatePolling{
+				RefreshRate: 20,
+				Timeout:     50,
+				Query:       "SELECT id, requestData, type FROM stored_amp_data WHERE last_updated > $1",
 			},
 		},
 	}
@@ -153,13 +178,17 @@ func TestNewPostgresEventProducers(t *testing.T) {
 		t.Fatalf("Failed to create mock: %v", err)
 	}
 	mock.ExpectQuery("^" + regexp.QuoteMeta(cfg.Postgres.CacheInitialization.Query) + "$").WillReturnError(errors.New("Query failed"))
-	mock.ExpectQuery("^" + regexp.QuoteMeta(cfg.Postgres.CacheInitialization.AmpQuery) + "$").WillReturnError(errors.New("Query failed"))
+	mock.ExpectQuery("^" + regexp.QuoteMeta(ampCfg.Postgres.CacheInitialization.Query) + "$").WillReturnError(errors.New("Query failed"))
 
-	evProducers, ampEvProducers := newEventProducers(cfg, client, db, nil)
-	assertExpectationsMet(t, mock)
+	evProducers := newEventProducers(cfg, client, db, nil)
 	assertProducerLength(t, evProducers, 2)
+
+	ampEvProducers := newEventProducers(ampCfg, client, db, nil)
 	assertProducerLength(t, ampEvProducers, 2)
+
+	assertExpectationsMet(t, mock)
 }
+
 func TestNewEventsAPI(t *testing.T) {
 	router := httprouter.New()
 	newEventsAPI(router, "/test-endpoint")
