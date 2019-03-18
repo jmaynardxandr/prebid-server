@@ -63,13 +63,20 @@ func CreateStoredRequests(cfg *config.StoredRequestsSlim, client *http.Client, r
 	}
 
 	eventProducers := newEventProducers(cfg, client, db, router)
-	cache := newCache(cfg)
 	fetcher = newFetcher(cfg, client, db)
-	fetcher = stored_requests.WithCache(fetcher, cache)
 
-	shutdown1 := addListeners(cache, eventProducers)
+	var shutdown1 func()
+
+	if cfg.InMemoryCache.Type != "" {
+		cache := newCache(cfg)
+		fetcher = stored_requests.WithCache(fetcher, cache)
+		shutdown1 = addListeners(cache, eventProducers)
+	}
+
 	shutdown = func() {
-		shutdown1()
+		if shutdown1 != nil {
+			shutdown1()
+		}
 		if dbConnection.db != nil {
 			db := dbConnection.db
 			dbConnection.db = nil
