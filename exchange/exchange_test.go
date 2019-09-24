@@ -581,7 +581,7 @@ func newExtRequestTranslateCatNil() openrtb_ext.ExtRequest {
 		},
 	}
 
-	brandCat := openrtb_ext.ExtIncludeBrandCategory{PrimaryAdServer: 1}
+	brandCat := openrtb_ext.ExtIncludeBrandCategory{WithCategory: true, PrimaryAdServer: 1}
 
 	reqExt := openrtb_ext.ExtRequestTargeting{
 		PriceGranularity:     priceGran,
@@ -609,7 +609,7 @@ func newExtRequestTranslateCatFalse() openrtb_ext.ExtRequest {
 	}
 
 	translateCat := false
-	brandCat := openrtb_ext.ExtIncludeBrandCategory{TranslateCategories: &translateCat}
+	brandCat := openrtb_ext.ExtIncludeBrandCategory{WithCategory: true, TranslateCategories: &translateCat}
 
 	reqExt := openrtb_ext.ExtRequestTargeting{
 		PriceGranularity:     priceGran,
