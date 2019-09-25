@@ -360,10 +360,6 @@ func applyCategoryMapping(ctx context.Context, requestExt openrtb_ext.ExtRequest
 
 	dedupe := make(map[string]bidDedupe)
 
-	//If includebrandcategory is present in ext then CE feature is on.
-	if requestExt.Prebid.Targeting == nil {
-		return res, seatBids, nil
-	}
 	brandCatExt := requestExt.Prebid.Targeting.IncludeBrandCategory
 
 	//If ext.prebid.targeting.includebrandcategory is present in ext then competitive exclusion feature is on.
