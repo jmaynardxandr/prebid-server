@@ -829,7 +829,7 @@ func TestMergeOpenRTBToVideoRequest(t *testing.T) {
 		Ext:      json.RawMessage(`{"consent":"test string"}`),
 	}
 
-	mergeData(videoReq, bidReq)
+	mergeData(videoReq, bidReq, http.Header{})
 
 	assert.Equal(t, videoReq.BCat, bidReq.BCat, "BCat is incorrect")
 	assert.Equal(t, videoReq.BAdv, bidReq.BAdv, "BAdv is incorrect")
@@ -898,88 +898,60 @@ func TestHandleErrorMetrics(t *testing.T) {
 }
 
 func TestParseVideoRequestWithUserAgentAndHeader(t *testing.T) {
-	ex := &mockExchangeVideo{}
-	reqData, err := ioutil.ReadFile("sample-requests/video/video_valid_sample_with_device_user_agent.json")
-	if err != nil {
-		t.Fatalf("Failed to fetch a valid request: %v", err)
+	var bidReq = &openrtb.BidRequest{}
+	var videoReq = &openrtb_ext.BidRequestVideo{}
+	videoReq.Device = openrtb.Device{
+		UA: "TestHeaderSample",
 	}
+
 	headers := http.Header{}
 	headers.Add("User-Agent", "TestHeader")
 
-	deps := mockDeps(t, ex)
-	reqBody := string(getRequestPayload(t, reqData))
-	req, valErr, podErr := deps.parseVideoRequest([]byte(reqBody), headers)
+	mergeData(videoReq, bidReq, headers)
 
-	assert.Equal(t, "TestHeaderSample", req.Device.UA, "Header should be taken from original request")
-	assert.Equal(t, []error(nil), valErr, "No validation errors should be returned")
-	assert.Equal(t, make([]PodError, 0), podErr, "No pod errors should be returned")
-
+	assert.Equal(t, "TestHeaderSample", bidReq.Device.UA, "Header should be taken from original request")
 }
 
 func TestParseVideoRequestWithUserAgentAndEmptyHeader(t *testing.T) {
-	ex := &mockExchangeVideo{}
-	reqData, err := ioutil.ReadFile("sample-requests/video/video_valid_sample_with_device_user_agent.json")
-	if err != nil {
-		t.Fatalf("Failed to fetch a valid request: %v", err)
+	var bidReq = &openrtb.BidRequest{}
+	var videoReq = &openrtb_ext.BidRequestVideo{}
+	videoReq.Device = openrtb.Device{
+		UA: "TestHeaderSample",
 	}
 
 	headers := http.Header{}
 
-	deps := mockDeps(t, ex)
-	reqBody := string(getRequestPayload(t, reqData))
-	req, valErr, podErr := deps.parseVideoRequest([]byte(reqBody), headers)
+	mergeData(videoReq, bidReq, headers)
 
-	assert.Equal(t, "TestHeaderSample", req.Device.UA, "Header should be taken from original request")
-	assert.Equal(t, []error(nil), valErr, "No validation errors should be returned")
-	assert.Equal(t, make([]PodError, 0), podErr, "No pod errors should be returned")
-
+	assert.Equal(t, "TestHeaderSample", bidReq.Device.UA, "Header should be taken from original request")
 }
 
 func TestParseVideoRequestWithoutUserAgentWithHeader(t *testing.T) {
-	ex := &mockExchangeVideo{}
-	reqData, err := ioutil.ReadFile("sample-requests/video/video_valid_sample_without_device_user_agent.json")
-	if err != nil {
-		t.Fatalf("Failed to fetch a valid request: %v", err)
-	}
+	var bidReq = &openrtb.BidRequest{}
+	var videoReq = &openrtb_ext.BidRequestVideo{}
 
 	headers := http.Header{}
 	headers.Add("User-Agent", "TestHeader")
 
-	deps := mockDeps(t, ex)
-	reqBody := string(getRequestPayload(t, reqData))
-	req, valErr, podErr := deps.parseVideoRequest([]byte(reqBody), headers)
+	mergeData(videoReq, bidReq, headers)
 
-	assert.Equal(t, "TestHeader", req.Device.UA, "Device.ua should be taken from request header")
-	assert.Equal(t, []error(nil), valErr, "No validation errors should be returned")
-	assert.Equal(t, make([]PodError, 0), podErr, "No pod errors should be returned")
-
+	assert.Equal(t, "TestHeader", bidReq.Device.UA, "Device.ua should be taken from request header")
 }
 
 func TestParseVideoRequestWithoutUserAgentAndEmptyHeader(t *testing.T) {
-	ex := &mockExchangeVideo{}
-	reqData, err := ioutil.ReadFile("sample-requests/video/video_valid_sample_without_device_user_agent.json")
-	if err != nil {
-		t.Fatalf("Failed to fetch a valid request: %v", err)
-	}
+	var bidReq = &openrtb.BidRequest{}
+	var videoReq = &openrtb_ext.BidRequestVideo{}
 
 	headers := http.Header{}
 
-	deps := mockDeps(t, ex)
-	reqBody := string(getRequestPayload(t, reqData))
-	req, valErr, podErr := deps.parseVideoRequest([]byte(reqBody), headers)
-
-	assert.Equal(t, "", req.Device.UA, "Device.ua should be empty")
-	assert.Equal(t, []error(nil), valErr, "No validation errors should be returned")
-	assert.Equal(t, make([]PodError, 0), podErr, "No pod errors should be returned")
+	mergeData(videoReq, bidReq, headers)
+	assert.Equal(t, "", bidReq.Device.UA, "Device.ua should be empty")
 
 }
 
 func TestParseVideoRequestWithEncodedUserAgentInHeader(t *testing.T) {
-	ex := &mockExchangeVideo{}
-	reqData, err := ioutil.ReadFile("sample-requests/video/video_valid_sample_without_device_user_agent.json")
-	if err != nil {
-		t.Fatalf("Failed to fetch a valid request: %v", err)
-	}
+	var bidReq = &openrtb.BidRequest{}
+	var videoReq = &openrtb_ext.BidRequestVideo{}
 
 	uaEncoded := "Mozilla%2F5.0%20%28Macintosh%3B%20Intel%20Mac%20OS%20X%2010_14_6%29%20AppleWebKit%2F537.36%20%28KHTML%2C%20like%20Gecko%29%20Chrome%2F78.0.3904.87%20Safari%2F537.36"
 	uaDecoded := "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.87 Safari/537.36"
@@ -987,36 +959,23 @@ func TestParseVideoRequestWithEncodedUserAgentInHeader(t *testing.T) {
 	headers := http.Header{}
 	headers.Add("User-Agent", uaEncoded)
 
-	deps := mockDeps(t, ex)
-	reqBody := string(getRequestPayload(t, reqData))
-	req, valErr, podErr := deps.parseVideoRequest([]byte(reqBody), headers)
+	mergeData(videoReq, bidReq, headers)
 
-	assert.Equal(t, uaDecoded, req.Device.UA, "Device.ua should be taken from request header")
-	assert.Equal(t, []error(nil), valErr, "No validation errors should be returned")
-	assert.Equal(t, make([]PodError, 0), podErr, "No pod errors should be returned")
-
+	assert.Equal(t, uaDecoded, bidReq.Device.UA, "Device.ua should be taken from request header")
 }
 
 func TestParseVideoRequestWithDecodedUserAgentInHeader(t *testing.T) {
-	ex := &mockExchangeVideo{}
-	reqData, err := ioutil.ReadFile("sample-requests/video/video_valid_sample_without_device_user_agent.json")
-	if err != nil {
-		t.Fatalf("Failed to fetch a valid request: %v", err)
-	}
+	var bidReq = &openrtb.BidRequest{}
+	var videoReq = &openrtb_ext.BidRequestVideo{}
 
 	uaDecoded := "Mozilla/5.0+(Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.87 Safari/537.36"
 
 	headers := http.Header{}
 	headers.Add("User-Agent", uaDecoded)
 
-	deps := mockDeps(t, ex)
-	reqBody := string(getRequestPayload(t, reqData))
-	req, valErr, podErr := deps.parseVideoRequest([]byte(reqBody), headers)
+	mergeData(videoReq, bidReq, headers)
 
-	assert.Equal(t, uaDecoded, req.Device.UA, "Device.ua should be taken from request header")
-	assert.Equal(t, []error(nil), valErr, "No validation errors should be returned")
-	assert.Equal(t, make([]PodError, 0), podErr, "No pod errors should be returned")
-
+	assert.Equal(t, uaDecoded, bidReq.Device.UA, "Device.ua should be taken from request header")
 }
 
 func TestHandleErrorDebugLog(t *testing.T) {
@@ -1199,6 +1158,18 @@ func TestFormatTargetingKey(t *testing.T) {
 func TestFormatTargetingKeyLongKey(t *testing.T) {
 	res := formatTargetingKey(openrtb_ext.HbpbConstantKey, "20.00")
 	assert.Equal(t, "hb_pb_20.00", res, "Tergeting key constructed incorrectly")
+}
+
+func TestBuildAdPodList(t *testing.T) {
+	adPods := map[int64]*openrtb_ext.AdPod{}
+	adPods[2] = &openrtb_ext.AdPod{PodId: 2}
+	adPods[3] = &openrtb_ext.AdPod{PodId: 3}
+	adPods[1] = &openrtb_ext.AdPod{PodId: 1}
+	res := buildAdPodList(adPods)
+	assert.Equal(t, 1, int(res[0].PodId), "Incorrect pod id")
+	assert.Equal(t, 2, int(res[1].PodId), "Incorrect pod id")
+	assert.Equal(t, 3, int(res[2].PodId), "Incorrect pod id")
+
 }
 
 func mockDepsWithMetrics(t *testing.T, ex *mockExchangeVideo) (*endpointDeps, *pbsmetrics.Metrics, *mockAnalyticsModule) {
